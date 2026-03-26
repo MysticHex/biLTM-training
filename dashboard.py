@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from paths import REPORTS_DIR, PLOTS_DIR, ensure_artifact_dirs
 
 
 def create_retrofit_dashboard(anomaly_df, building_meta, results, top_n=20):
@@ -20,6 +21,7 @@ def create_retrofit_dashboard(anomaly_df, building_meta, results, top_n=20):
     print("=" * 60)
     print("🏢 RETROFIT PRIORITY DASHBOARD")
     print("=" * 60)
+    ensure_artifact_dirs()
 
     # Generate report
     report = []
@@ -48,8 +50,9 @@ def create_retrofit_dashboard(anomaly_df, building_meta, results, top_n=20):
     report_df = pd.DataFrame(report)
 
     # Save CSV
-    report_df.to_csv('retrofit_priority_report.csv', index=False)
-    print(f"\n✅ Report saved: retrofit_priority_report.csv")
+    report_path = REPORTS_DIR / 'retrofit_priority_report.csv'
+    report_df.to_csv(report_path, index=False)
+    print(f"\n✅ Report saved: {report_path}")
 
     # Create dashboard visualization
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
@@ -93,10 +96,11 @@ def create_retrofit_dashboard(anomaly_df, building_meta, results, top_n=20):
     axes[1,1].axis('off')
 
     plt.tight_layout()
-    plt.savefig('retrofit_dashboard.png', dpi=150, bbox_inches='tight')
+    dashboard_path = PLOTS_DIR / 'retrofit_dashboard.png'
+    plt.savefig(dashboard_path, dpi=150, bbox_inches='tight')
     plt.show()
 
-    print(f"\n✅ Dashboard saved: retrofit_dashboard.png")
+    print(f"\n✅ Dashboard saved: {dashboard_path}")
 
     return report_df
 

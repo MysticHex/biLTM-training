@@ -214,7 +214,7 @@ python run_final.py
 from preprocessing import run_preprocessing
 
 data = run_preprocessing(data_path='data')
-# Output: processed_train.npy, processed_val.npy, processed_test.npy
+# Output: artifacts/processed/processed_*.npy
 ```
 
 **Pipeline:**
@@ -334,7 +334,7 @@ rank,building_id,primary_use,square_feet,anomaly_score,avg_consumption_kwh,poten
 ```
 
 ### 4-Panel Dashboard
-![Dashboard Preview](retrofit_dashboard.png)
+Generated at: `artifacts/plots/retrofit_dashboard.png`
 
 1. **Priority by Building Type** - Anomaly score per use type
 2. **Potential Savings** - Scatter plot (size vs savings)
@@ -407,7 +407,7 @@ python api_server.py
 | `/api/chart/top-anomalies` | GET | Top anomalous buildings |
 
 ### Dashboard Preview
-![Dashboard Preview](retrofit_dashboard.png)
+Generated at: `artifacts/plots/retrofit_dashboard.png`
 
 **Tech Stack:**
 - **Backend:** FastAPI + Python

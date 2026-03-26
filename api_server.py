@@ -26,6 +26,7 @@ import json
 from pathlib import Path
 from typing import List, Optional
 import sys
+from paths import METRICS_DIR, REPORTS_DIR, PROCESSED_DIR, CONFIG_DIR
 
 app = FastAPI(
     title="AttnRetrofit API",
@@ -64,23 +65,23 @@ def load_data():
     
     try:
         # Load test metrics
-        metrics_path = DATA_DIR / "test_metrics.json"
+        metrics_path = METRICS_DIR / "test_metrics.json"
         if metrics_path.exists():
             with open(metrics_path, 'r') as f:
                 DATA["metrics"] = json.load(f)
-            print("✅ Loaded test_metrics.json")
+            print(f"✅ Loaded {metrics_path}")
         
         # Load anomaly report
-        anomaly_path = DATA_DIR / "anomaly_report.csv"
+        anomaly_path = REPORTS_DIR / "anomaly_report.csv"
         if anomaly_path.exists():
             DATA["anomaly_report"] = pd.read_csv(anomaly_path)
-            print("✅ Loaded anomaly_report.csv")
+            print(f"✅ Loaded {anomaly_path}")
         
         # Load retrofit priority report
-        retrofit_path = DATA_DIR / "retrofit_priority_report.csv"
+        retrofit_path = REPORTS_DIR / "retrofit_priority_report.csv"
         if retrofit_path.exists():
             DATA["retrofit_report"] = pd.read_csv(retrofit_path)
-            print("✅ Loaded retrofit_priority_report.csv")
+            print(f"✅ Loaded {retrofit_path}")
         
         # Load building metadata
         meta_path = DATA_DIR / "data" / "building_metadata.csv"
@@ -89,9 +90,9 @@ def load_data():
             print("✅ Loaded building_metadata.csv")
         
         # Load test predictions
-        test_seq_path = DATA_DIR / "processed_test_seq.npy"
-        test_tgt_path = DATA_DIR / "processed_test_tgt.npy"
-        test_bid_path = DATA_DIR / "processed_test_bid.npy"
+        test_seq_path = PROCESSED_DIR / "processed_test_seq.npy"
+        test_tgt_path = PROCESSED_DIR / "processed_test_tgt.npy"
+        test_bid_path = PROCESSED_DIR / "processed_test_bid.npy"
         
         if all(p.exists() for p in [test_seq_path, test_tgt_path, test_bid_path]):
             DATA["test_data"] = {
@@ -102,11 +103,11 @@ def load_data():
             print("✅ Loaded test data")
         
         # Load best params
-        params_path = DATA_DIR / "best_params.json"
+        params_path = CONFIG_DIR / "best_params.json"
         if params_path.exists():
             with open(params_path, 'r') as f:
                 DATA["config"] = json.load(f)
-            print("✅ Loaded best_params.json")
+            print(f"✅ Loaded {params_path}")
         
         print("✅ All data loaded successfully!")
         

@@ -16,6 +16,7 @@ import json
 from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
+from paths import PROCESSED_DIR, CONFIG_DIR, MODELS_DIR, METRICS_DIR, PLOTS_DIR, ensure_artifact_dirs
 
 # Set seeds
 SEED = 42
@@ -33,6 +34,23 @@ from xai import calculate_shap_values, visualize_global_shap, visualize_local_sh
 from dashboard import create_retrofit_dashboard
 
 def main():
+    ensure_artifact_dirs()
+
+    train_seq_path = PROCESSED_DIR / 'processed_train_seq.npy'
+    train_tgt_path = PROCESSED_DIR / 'processed_train_tgt.npy'
+    train_bid_path = PROCESSED_DIR / 'processed_train_bid.npy'
+    val_seq_path = PROCESSED_DIR / 'processed_val_seq.npy'
+    val_tgt_path = PROCESSED_DIR / 'processed_val_tgt.npy'
+    val_bid_path = PROCESSED_DIR / 'processed_val_bid.npy'
+    test_seq_path = PROCESSED_DIR / 'processed_test_seq.npy'
+    test_tgt_path = PROCESSED_DIR / 'processed_test_tgt.npy'
+    test_bid_path = PROCESSED_DIR / 'processed_test_bid.npy'
+    embedding_info_path = PROCESSED_DIR / 'embedding_info.pkl'
+    best_params_path = CONFIG_DIR / 'best_params.json'
+    best_model_path = MODELS_DIR / 'best_model.pth'
+    metrics_path = METRICS_DIR / 'test_metrics.json'
+    history_plot_path = PLOTS_DIR / 'training_history.png'
+
     print("=" * 80)
     print("🚀 ATTNRETROFIT - FINAL MODEL TRAINING")
     print("=" * 80)
@@ -49,21 +67,21 @@ def main():
     print("=" * 80)
 
     train_data = {
-        'sequences': np.load('processed_train_seq.npy'),
-        'targets': np.load('processed_train_tgt.npy'),
-        'building_ids': np.load('processed_train_bid.npy')
+        'sequences': np.load(train_seq_path),
+        'targets': np.load(train_tgt_path),
+        'building_ids': np.load(train_bid_path)
     }
     val_data = {
-        'sequences': np.load('processed_val_seq.npy'),
-        'targets': np.load('processed_val_tgt.npy'),
-        'building_ids': np.load('processed_val_bid.npy')
+        'sequences': np.load(val_seq_path),
+        'targets': np.load(val_tgt_path),
+        'building_ids': np.load(val_bid_path)
     }
     test_data = {
-        'sequences': np.load('processed_test_seq.npy'),
-        'targets': np.load('processed_test_tgt.npy'),
-        'building_ids': np.load('processed_test_bid.npy')
+        'sequences': np.load(test_seq_path),
+        'targets': np.load(test_tgt_path),
+        'building_ids': np.load(test_bid_path)
     }
-    embedding_info = joblib.load('embedding_info.pkl')
+    embedding_info = joblib.load(embedding_info_path)
 
     print(f"Train sequences: {train_data['sequences'].shape}")
     print(f"Val sequences: {val_data['sequences'].shape}")
@@ -75,12 +93,12 @@ def main():
     )
 
     # Load best params atau gunakan default
-    if Path('best_params.json').exists():
-        with open('best_params.json', 'r') as f:
+    if best_params_path.exists():
+        with open(best_params_path, 'r') as f:
             best_params = json.load(f)
-        print("\n✅ Loaded best hyperparameters from best_params.json")
+        print(f"\n✅ Loaded best hyperparameters from {best_params_path}")
     else:
-        print("\n⚠️ best_params.json not found, using defaults")
+        print(f"\n⚠️ {best_params_path} not found, using defaults")
         best_params = {
             'hidden_dim': 128,
             'num_layers': 2,
@@ -154,7 +172,7 @@ def main():
         axes[1,1].set_title('Validation RMSLE')
 
         plt.tight_layout()
-        plt.savefig('training_history.png', dpi=150)
+        plt.savefig(history_plot_path, dpi=150)
         plt.show()
 
         # Final evaluation on test set
@@ -163,7 +181,7 @@ def main():
         print("=" * 80)
 
         # Load best model
-        checkpoint = torch.load('best_model.pth')
+        checkpoint = torch.load(best_model_path)
         model.load_state_dict(checkpoint['model_state_dict'])
 
         test_results = get_predictions(model, test_loader, device)
@@ -174,14 +192,14 @@ def main():
             print(f"  {metric}: {value:.4f}")
 
         # Save metrics
-        with open('test_metrics.json', 'w') as f:
+        with open(metrics_path, 'w') as f:
             json.dump(test_metrics, f, indent=2)
 
         print("\n✅ Training complete!")
         print("\nFiles saved:")
-        print("  - best_model.pth (model checkpoint)")
-        print("  - training_history.png")
-        print("  - test_metrics.json")
+        print(f"  - {best_model_path} (model checkpoint)")
+        print(f"  - {history_plot_path}")
+        print(f"  - {metrics_path}")
 
         print("\nNext steps:")
         print("  1. Run XAI analysis dengan xai.py")
@@ -189,7 +207,7 @@ def main():
 
     except KeyboardInterrupt:
         print("\n\n⚠️ Training interrupted.")
-        print("Best model saved so far: best_model.pth")
+        print(f"Best model saved so far: {best_model_path}")
     except Exception as e:
         print(f"\n❌ Error during training: {e}")
         import traceback

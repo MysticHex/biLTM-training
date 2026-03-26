@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import shap
+from paths import PLOTS_DIR, ensure_artifact_dirs
 
 
 class ModelWrapper:
@@ -65,6 +66,7 @@ def visualize_global_shap(shap_values, test_data, feature_names):
     Global feature importance (summary plot)
     """
     print("=== GLOBAL SHAP VISUALIZATION ===")
+    ensure_artifact_dirs()
 
     fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -80,7 +82,8 @@ def visualize_global_shap(shap_values, test_data, feature_names):
     )
     plt.title("Global Feature Importance (SHAP)")
     plt.tight_layout()
-    plt.savefig('shap_global.png', dpi=150, bbox_inches='tight')
+    output_path = PLOTS_DIR / 'shap_global.png'
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.show()
 
     # Print top features
@@ -97,6 +100,7 @@ def visualize_local_shap(shap_values, test_data, test_indices, residual_errors,
     Local SHAP untuk anomalous samples
     """
     print("=== LOCAL SHAP VISUALIZATION ===")
+    ensure_artifact_dirs()
 
     # Find anomalous samples
     anomalous_indices = np.argsort(residual_errors[test_indices])[-top_k:]
@@ -120,7 +124,8 @@ def visualize_local_shap(shap_values, test_data, test_indices, residual_errors,
         axes[i].invert_yaxis()
 
     plt.tight_layout()
-    plt.savefig('shap_local.png', dpi=150, bbox_inches='tight')
+    output_path = PLOTS_DIR / 'shap_local.png'
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.show()
 
 
@@ -130,6 +135,7 @@ def visualize_multihead_attention(model, sample_sequence, sample_building_id,
     Visualisasi multi-head attention weights
     """
     print("=== MULTI-HEAD ATTENTION VISUALIZATION ===")
+    ensure_artifact_dirs()
 
     model.eval()
     with torch.no_grad():
@@ -151,7 +157,8 @@ def visualize_multihead_attention(model, sample_sequence, sample_building_id,
 
     plt.suptitle('Multi-Head Attention Weights', fontsize=14)
     plt.tight_layout()
-    plt.savefig('attention_multihead.png', dpi=150, bbox_inches='tight')
+    output_path = PLOTS_DIR / 'attention_multihead.png'
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.show()
 
     # Analyze head patterns
@@ -179,6 +186,7 @@ def visualize_attention_timeline(model, sample_sequence, sample_building_id,
     """
     Timeline attention untuk satu sample
     """
+    ensure_artifact_dirs()
     model.eval()
     with torch.no_grad():
         _, attn_weights = model(sample_sequence, sample_building_id)
@@ -197,7 +205,8 @@ def visualize_attention_timeline(model, sample_sequence, sample_building_id,
     ax.legend()
 
     plt.tight_layout()
-    plt.savefig('attention_timeline.png', dpi=150, bbox_inches='tight')
+    output_path = PLOTS_DIR / 'attention_timeline.png'
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.show()
 
 

@@ -16,6 +16,7 @@ import copy
 import optuna
 from optuna.trial import TrialState
 import joblib
+from paths import MODELS_DIR, STUDIES_DIR, ensure_artifact_dirs
 
 
 class ASHRAELoss(torch.nn.Module):
@@ -140,6 +141,7 @@ def train_model(model, train_loader, val_loader, config, device='cuda'):
     print("=" * 60)
     print("🚀 TRAINING")
     print("=" * 60)
+    ensure_artifact_dirs()
 
     criterion = ASHRAELoss(alpha=config.get('loss_alpha', 0.5))
     optimizer = AdamW(
@@ -178,14 +180,15 @@ def train_model(model, train_loader, val_loader, config, device='cuda'):
 
         if val_rmsle < best_val_rmsle:
             best_val_rmsle = val_rmsle
+            model_path = MODELS_DIR / 'best_model.pth'
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'config': config,
                 'val_rmsle': val_rmsle
-            }, 'best_model.pth')
-            print(f"✅ Saved best model (RMSLE: {val_rmsle:.4f})")
+            }, model_path)
+            print(f"✅ Saved best model: {model_path} (RMSLE: {val_rmsle:.4f})")
 
         early_stopping(val_loss, model)
         if early_stopping.early_stop:
@@ -203,6 +206,7 @@ def create_optuna_study(train_loader, val_loader, base_config, device='cuda'):
     print("=" * 60)
     print("🔧 HYPERPARAMETER TUNING WITH OPTUNA")
     print("=" * 60)
+    ensure_artifact_dirs()
 
     def objective(trial):
         # Hyperparameter search space
@@ -289,8 +293,9 @@ def create_optuna_study(train_loader, val_loader, base_config, device='cuda'):
     for key, value in study.best_params.items():
         print(f"  {key}: {value}")
 
-    joblib.dump(study, 'optuna_study.pkl')
-    print("\n✅ Study saved to optuna_study.pkl")
+    study_path = STUDIES_DIR / 'optuna_study.pkl'
+    joblib.dump(study, study_path)
+    print(f"\n✅ Study saved to {study_path}")
 
     return study.best_params
 

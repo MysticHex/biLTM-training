@@ -16,6 +16,7 @@ import joblib
 from pathlib import Path
 import json
 import gc
+from paths import PROCESSED_DIR, CONFIG_DIR, ensure_artifact_dirs
 
 # Set seeds untuk reproducibility
 SEED = 42
@@ -30,6 +31,20 @@ from model import create_model
 from train import create_optuna_study, train_model, ASHRAELoss
 
 def main():
+    ensure_artifact_dirs()
+
+    train_seq_path = PROCESSED_DIR / 'processed_train_seq.npy'
+    train_tgt_path = PROCESSED_DIR / 'processed_train_tgt.npy'
+    train_bid_path = PROCESSED_DIR / 'processed_train_bid.npy'
+    val_seq_path = PROCESSED_DIR / 'processed_val_seq.npy'
+    val_tgt_path = PROCESSED_DIR / 'processed_val_tgt.npy'
+    val_bid_path = PROCESSED_DIR / 'processed_val_bid.npy'
+    test_seq_path = PROCESSED_DIR / 'processed_test_seq.npy'
+    test_tgt_path = PROCESSED_DIR / 'processed_test_tgt.npy'
+    test_bid_path = PROCESSED_DIR / 'processed_test_bid.npy'
+    embedding_info_path = PROCESSED_DIR / 'embedding_info.pkl'
+    best_params_path = CONFIG_DIR / 'best_params.json'
+
     print("=" * 80)
     print("🚀 ATTNRETROFIT - TRAINING PIPELINE")
     print("=" * 80)
@@ -46,7 +61,7 @@ def main():
     print("STEP 1: PREPROCESSING")
     print("=" * 80)
 
-    if not Path('processed_train_seq.npy').exists():
+    if not train_seq_path.exists():
         print("Running preprocessing...")
         data = run_preprocessing(data_path='data')
 
@@ -54,43 +69,43 @@ def main():
         print("\n💾 Saving processed data (memory-efficient)...")
         
         # Save train components separately
-        np.save('processed_train_seq.npy', data['train']['sequences'].astype(np.float32))
-        np.save('processed_train_tgt.npy', data['train']['targets'].astype(np.float32))
-        np.save('processed_train_bid.npy', data['train']['building_ids'])
+        np.save(train_seq_path, data['train']['sequences'].astype(np.float32))
+        np.save(train_tgt_path, data['train']['targets'].astype(np.float32))
+        np.save(train_bid_path, data['train']['building_ids'])
         gc.collect()
         
         # Save val components
-        np.save('processed_val_seq.npy', data['val']['sequences'].astype(np.float32))
-        np.save('processed_val_tgt.npy', data['val']['targets'].astype(np.float32))
-        np.save('processed_val_bid.npy', data['val']['building_ids'])
+        np.save(val_seq_path, data['val']['sequences'].astype(np.float32))
+        np.save(val_tgt_path, data['val']['targets'].astype(np.float32))
+        np.save(val_bid_path, data['val']['building_ids'])
         gc.collect()
         
         # Save test components
-        np.save('processed_test_seq.npy', data['test']['sequences'].astype(np.float32))
-        np.save('processed_test_tgt.npy', data['test']['targets'].astype(np.float32))
-        np.save('processed_test_bid.npy', data['test']['building_ids'])
+        np.save(test_seq_path, data['test']['sequences'].astype(np.float32))
+        np.save(test_tgt_path, data['test']['targets'].astype(np.float32))
+        np.save(test_bid_path, data['test']['building_ids'])
         gc.collect()
         
-        joblib.dump(data['embedding_info'], 'embedding_info.pkl')
+        joblib.dump(data['embedding_info'], embedding_info_path)
         print("✅ Data saved!")
     else:
         print("Loading existing processed data...")
         train_data = {
-            'sequences': np.load('processed_train_seq.npy'),
-            'targets': np.load('processed_train_tgt.npy'),
-            'building_ids': np.load('processed_train_bid.npy')
+            'sequences': np.load(train_seq_path),
+            'targets': np.load(train_tgt_path),
+            'building_ids': np.load(train_bid_path)
         }
         val_data = {
-            'sequences': np.load('processed_val_seq.npy'),
-            'targets': np.load('processed_val_tgt.npy'),
-            'building_ids': np.load('processed_val_bid.npy')
+            'sequences': np.load(val_seq_path),
+            'targets': np.load(val_tgt_path),
+            'building_ids': np.load(val_bid_path)
         }
         test_data = {
-            'sequences': np.load('processed_test_seq.npy'),
-            'targets': np.load('processed_test_tgt.npy'),
-            'building_ids': np.load('processed_test_bid.npy')
+            'sequences': np.load(test_seq_path),
+            'targets': np.load(test_tgt_path),
+            'building_ids': np.load(test_bid_path)
         }
-        embedding_info = joblib.load('embedding_info.pkl')
+        embedding_info = joblib.load(embedding_info_path)
 
         data = {
             'train': train_data,
@@ -152,9 +167,9 @@ def main():
             print(f"  {key}: {value}")
 
         # Save best params
-        with open('best_params.json', 'w') as f:
+        with open(best_params_path, 'w') as f:
             json.dump(best_params, f, indent=2)
-        print("\n✅ Best params saved to best_params.json")
+        print(f"\n✅ Best params saved to {best_params_path}")
 
     except KeyboardInterrupt:
         print("\n\n⚠️ Training interrupted by user.")

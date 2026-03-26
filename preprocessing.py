@@ -530,14 +530,17 @@ def run_preprocessing(data_path='data', sample_size=SAMPLE_SIZE):
 
 if __name__ == "__main__":
     import joblib
+    from paths import PROCESSED_DIR, ensure_artifact_dirs
+
+    ensure_artifact_dirs()
 
     # Run preprocessing
     data = run_preprocessing()
 
     # Save processed data
     print("\nSaving processed data...")
-    np.save('processed_train.npy', data['train'])
-    np.save('processed_val.npy', data['val'])
-    np.save('processed_test.npy', data['test'])
-    joblib.dump(data['embedding_info'], 'embedding_info.pkl')
+    np.save(PROCESSED_DIR / 'processed_train.npy', data['train'])
+    np.save(PROCESSED_DIR / 'processed_val.npy', data['val'])
+    np.save(PROCESSED_DIR / 'processed_test.npy', data['test'])
+    joblib.dump(data['embedding_info'], PROCESSED_DIR / 'embedding_info.pkl')
     print("✅ Data saved!")

@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
+from paths import PROCESSED_DIR, CONFIG_DIR, MODELS_DIR, REPORTS_DIR, ensure_artifact_dirs
 
 # Set seeds
 SEED = 42
@@ -29,6 +30,19 @@ from dashboard import create_retrofit_dashboard, print_summary_table
 
 
 def main():
+    ensure_artifact_dirs()
+
+    train_seq_path = PROCESSED_DIR / 'processed_train_seq.npy'
+    train_tgt_path = PROCESSED_DIR / 'processed_train_tgt.npy'
+    train_bid_path = PROCESSED_DIR / 'processed_train_bid.npy'
+    test_seq_path = PROCESSED_DIR / 'processed_test_seq.npy'
+    test_tgt_path = PROCESSED_DIR / 'processed_test_tgt.npy'
+    test_bid_path = PROCESSED_DIR / 'processed_test_bid.npy'
+    embedding_info_path = PROCESSED_DIR / 'embedding_info.pkl'
+    best_params_path = CONFIG_DIR / 'best_params.json'
+    best_model_path = MODELS_DIR / 'best_model.pth'
+    anomaly_report_path = REPORTS_DIR / 'anomaly_report.csv'
+
     print("=" * 80)
     print("🎨 ATTNRETROFIT - XAI & DASHBOARD GENERATION")
     print("=" * 80)
@@ -43,23 +57,23 @@ def main():
     print("=" * 80)
 
     train_data = {
-        'sequences': np.load('processed_train_seq.npy'),
-        'targets': np.load('processed_train_tgt.npy'),
-        'building_ids': np.load('processed_train_bid.npy')
+        'sequences': np.load(train_seq_path),
+        'targets': np.load(train_tgt_path),
+        'building_ids': np.load(train_bid_path)
     }
     test_data = {
-        'sequences': np.load('processed_test_seq.npy'),
-        'targets': np.load('processed_test_tgt.npy'),
-        'building_ids': np.load('processed_test_bid.npy')
+        'sequences': np.load(test_seq_path),
+        'targets': np.load(test_tgt_path),
+        'building_ids': np.load(test_bid_path)
     }
-    embedding_info = joblib.load('embedding_info.pkl')
+    embedding_info = joblib.load(embedding_info_path)
 
     print(f"Train sequences: {train_data['sequences'].shape}")
     print(f"Test sequences: {test_data['sequences'].shape}")
 
     # Load best params
-    if Path('best_params.json').exists():
-        with open('best_params.json', 'r') as f:
+    if best_params_path.exists():
+        with open(best_params_path, 'r') as f:
             best_params = json.load(f)
     else:
         best_params = {
@@ -84,10 +98,10 @@ def main():
     # Create and load model
     model = create_model(config, device)
     
-    checkpoint = torch.load('best_model.pth', map_location=device)
+    checkpoint = torch.load(best_model_path, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
-    print("✅ Model loaded from best_model.pth")
+    print(f"✅ Model loaded from {best_model_path}")
 
     # Create test dataloader
     test_dataset = ASHRAEDataset(
@@ -193,19 +207,19 @@ def main():
         print(anomaly_df.head(10).to_string())
 
     # Save anomaly report
-    anomaly_df.to_csv('anomaly_report.csv', index=False)
-    print("\n✅ Saved: anomaly_report.csv")
+    anomaly_df.to_csv(anomaly_report_path, index=False)
+    print(f"\n✅ Saved: {anomaly_report_path}")
 
     # Summary
     print("\n" + "=" * 80)
     print("✅ XAI & DASHBOARD COMPLETE")
     print("=" * 80)
     print("\nFiles generated:")
-    print("  - attention_multihead.png")
-    print("  - attention_timeline.png")
-    print("  - retrofit_dashboard.png")
-    print("  - retrofit_priority_report.csv")
-    print("  - anomaly_report.csv")
+    print("  - artifacts/plots/attention_multihead.png")
+    print("  - artifacts/plots/attention_timeline.png")
+    print("  - artifacts/plots/retrofit_dashboard.png")
+    print("  - artifacts/reports/retrofit_priority_report.csv")
+    print("  - artifacts/reports/anomaly_report.csv")
 
     print("\n🎉 Project AttnRetrofit selesai!")
 
