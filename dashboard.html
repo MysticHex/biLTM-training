@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttnRetrofit Dashboard - Smart Building Retrofit Prioritization</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #7b2cbf;
+            --accent-warning: #ff6b35;
+            --accent-success: #00ff88;
+            --accent-danger: #ff3366;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --border-color: #2a2a4a;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --glow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(123, 44, 191, 0.1) 0%, transparent 50%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Header */
+        .header {
+            background: rgba(22, 33, 62, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--glow);
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .header-stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto auto auto;
+            gap: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent-primary);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* Stat Cards */
+        .stat-card .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .card-change {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .card-change.positive { color: var(--accent-success); }
+        .card-change.negative { color: var(--accent-danger); }
+
+        /* 3D Visualization Card */
+        .viz-card {
+            grid-column: span 2;
+            grid-row: span 2;
+            min-height: 400px;
+        }
+
+        #three-container {
+            width: 100%;
+            height: 350px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        /* Chart Cards */
+        .chart-card {
+            min-height: 300px;
+        }
+
+        .chart-card.wide {
+            grid-column: span 2;
+        }
+
+        .chart-container {
+            height: 220px;
+            position: relative;
+        }
+
+        /* Building List */
+        .building-list-card {
+            grid-column: span 2;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        .building-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .building-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .building-list::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .building-list::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 3px;
+        }
+
+        .building-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .building-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--accent-primary);
+        }
+
+        .building-rank {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-right: 1rem;
+        }
+
+        .building-rank.high { background: var(--accent-danger); }
+        .building-rank.medium { background: var(--accent-warning); }
+        .building-rank.low { background: var(--accent-success); }
+
+        .building-info {
+            flex: 1;
+        }
+
+        .building-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .building-type {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .building-score {
+            text-align: right;
+        }
+
+        .building-score-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .building-score-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Metrics Bar */
+        .metrics-bar {
+            grid-column: span 4;
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-item {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        /* Priority Badge */
+        .priority-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-high { background: rgba(255, 51, 102, 0.2); color: var(--accent-danger); }
+        .priority-medium { background: rgba(255, 107, 53, 0.2); color: var(--accent-warning); }
+        .priority-low { background: rgba(0, 255, 136, 0.2); color: var(--accent-success); }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .viz-card, .building-list-card, .chart-card.wide {
+                grid-column: span 2;
+            }
+            .metrics-bar {
+                grid-column: span 2;
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .viz-card, .building-list-card, .chart-card.wide, .metrics-bar {
+                grid-column: span 1;
+            }
+            .header-stats {
+                display: none;
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // API Base URL
+        const API_URL = 'http://localhost:8000/api';
+
+        // Fetch helper
+        const fetchAPI = async (endpoint) => {
+            try {
+                const res = await fetch(`${API_URL}${endpoint}`);
+                if (!res.ok) throw new Error('API Error');
+                return await res.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return null;
+            }
+        };
+
+        // Header Component
+        const Header = ({ summary }) => (
+            <header className="header">
+                <div className="header-content">
+                    <div className="logo">
+                        <div className="logo-icon">
+                            <i className="fas fa-building"></i>
+                        </div>
+                        <div className="logo-text">
+                            <h1>AttnRetrofit</h1>
+                            <span>Smart Building Retrofit Prioritization</span>
+                        </div>
+                    </div>
+                    <div className="header-stats">
+                        <div className="header-stat">
+                            <div className="header-stat-value">{summary?.total_buildings || 0}</div>
+                            <div className="header-stat-label">Buildings</div>
+                        </div>
+                        <div className="header-stat">
+                            <div className="header-stat-value">{summary?.high_priority || 0}</div>
+                            <div className="header-stat-label">High Priority</div>
+                        </div>
+                        <div className="header-stat">
+                            <div className="header-stat-value">
+                                {summary?.total_potential_savings 
+                                    ? `${(summary.total_potential_savings/1000).toFixed(0)}k`
+                                    : '0'} kWh
+                            </div>
+                            <div className="header-stat-label">Potential Savings</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+        );
+
+        // Stat Card Component
+        const StatCard = ({ title, value, icon, color, change }) => (
+            <div className="card stat-card">
+                <div className="card-header">
+                    <span className="card-title">{title}</span>
+                    <div className="card-icon" style={{ background: `${color}20`, color }}>
+                        <i className={`fas fa-${icon}`}></i>
+                    </div>
+                </div>
+                <div className="card-value" style={{ color }}>{value}</div>
+                {change && (
+                    <div className={`card-change ${change > 0 ? 'positive' : 'negative'}`}>
+                        <i className={`fas fa-arrow-${change > 0 ? 'up' : 'down'}`}></i>
+                        <span>{Math.abs(change)}% from baseline</span>
+                    </div>
+                )}
+            </div>
+        );
+
+        // 3D Visualization Component
+        const ThreeVisualization = ({ buildings }) => {
+            const containerRef = useRef(null);
+            const sceneRef = useRef(null);
+
+            useEffect(() => {
+                if (!containerRef.current || sceneRef.current) return;
+
+                // Scene setup
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                
+                renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+                renderer.setClearColor(0x000000, 0);
+                containerRef.current.appendChild(renderer.domElement);
+
+                // Lights
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+                scene.add(ambientLight);
+
+                const pointLight = new THREE.PointLight(0x00d4ff, 1, 100);
+                pointLight.position.set(10, 10, 10);
+                scene.add(pointLight);
+
+                const pointLight2 = new THREE.PointLight(0x7b2cbf, 0.8, 100);
+                pointLight2.position.set(-10, 5, -10);
+                scene.add(pointLight2);
+
+                // Create buildings
+                const buildingGroup = new THREE.Group();
+                const gridSize = 5;
+                const spacing = 2;
+
+                for (let i = 0; i < 25; i++) {
+                    const x = (i % gridSize) * spacing - (gridSize * spacing) / 2;
+                    const z = Math.floor(i / gridSize) * spacing - (gridSize * spacing) / 2;
+                    const height = Math.random() * 3 + 1;
+                    
+                    // Building score determines color
+                    const score = buildings?.[i]?.combined_score || Math.random() * 2 - 1;
+                    const normalizedScore = (score + 2) / 4; // Normalize to 0-1
+                    
+                    const geometry = new THREE.BoxGeometry(0.8, height, 0.8);
+                    const color = new THREE.Color();
+                    color.setHSL(0.5 - normalizedScore * 0.5, 0.8, 0.5); // Blue to Red
+                    
+                    const material = new THREE.MeshPhongMaterial({
+                        color: color,
+                        transparent: true,
+                        opacity: 0.9,
+                        emissive: color,
+                        emissiveIntensity: 0.2
+                    });
+
+                    const building = new THREE.Mesh(geometry, material);
+                    building.position.set(x, height / 2, z);
+                    buildingGroup.add(building);
+
+                    // Add glow for high anomaly
+                    if (score > 1) {
+                        const glowGeometry = new THREE.BoxGeometry(1, height + 0.2, 1);
+                        const glowMaterial = new THREE.MeshBasicMaterial({
+                            color: 0xff3366,
+                            transparent: true,
+                            opacity: 0.2
+                        });
+                        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                        glow.position.set(x, height / 2, z);
+                        buildingGroup.add(glow);
+                    }
+                }
+
+                scene.add(buildingGroup);
+
+                // Ground
+                const groundGeometry = new THREE.PlaneGeometry(15, 15);
+                const groundMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x1a1a2e,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = 0;
+                scene.add(ground);
+
+                // Grid
+                const gridHelper = new THREE.GridHelper(15, 15, 0x2a2a4a, 0x2a2a4a);
+                scene.add(gridHelper);
+
+                camera.position.set(8, 8, 8);
+                camera.lookAt(0, 1, 0);
+
+                // Animation
+                let angle = 0;
+                const animate = () => {
+                    requestAnimationFrame(animate);
+                    angle += 0.003;
+                    camera.position.x = Math.sin(angle) * 12;
+                    camera.position.z = Math.cos(angle) * 12;
+                    camera.lookAt(0, 1, 0);
+                    renderer.render(scene, camera);
+                };
+
+                animate();
+                sceneRef.current = { scene, renderer };
+
+                // Cleanup
+                return () => {
+                    if (containerRef.current && renderer.domElement) {
+                        containerRef.current.removeChild(renderer.domElement);
+                    }
+                };
+            }, [buildings]);
+
+            return <div id="three-container" ref={containerRef}></div>;
+        };
+
+        // Chart Component
+        const ChartCard = ({ title, type, data, wide }) => {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+
+            useEffect(() => {
+                if (!canvasRef.current || !data) return;
+
+                if (chartRef.current) {
+                    chartRef.current.destroy();
+                }
+
+                const ctx = canvasRef.current.getContext('2d');
+                
+                const config = {
+                    type: type,
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: type !== 'doughnut' ? {
+                            x: {
+                                grid: { color: '#2a2a4a' },
+                                ticks: { color: '#a0a0b0' }
+                            },
+                            y: {
+                                grid: { color: '#2a2a4a' },
+                                ticks: { color: '#a0a0b0' }
+                            }
+                        } : undefined
+                    }
+                };
+
+                chartRef.current = new Chart(ctx, config);
+
+                return () => {
+                    if (chartRef.current) {
+                        chartRef.current.destroy();
+                    }
+                };
+            }, [data, type]);
+
+            return (
+                <div className={`card chart-card ${wide ? 'wide' : ''}`}>
+                    <div className="card-header">
+                        <span className="card-title">{title}</span>
+                    </div>
+                    <div className="chart-container">
+                        <canvas ref={canvasRef}></canvas>
+                    </div>
+                </div>
+            );
+        };
+
+        // Building List Component
+        const BuildingList = ({ buildings }) => (
+            <div className="card building-list-card">
+                <div className="card-header">
+                    <span className="card-title">Retrofit Priority Ranking</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                        {buildings?.length || 0} buildings
+                    </span>
+                </div>
+                <div className="building-list">
+                    {buildings?.map((building, index) => {
+                        const priority = building.combined_score > 1.5 ? 'high' 
+                            : building.combined_score > 0.5 ? 'medium' : 'low';
+                        return (
+                            <div key={building.building_id} className="building-item">
+                                <div className={`building-rank ${priority}`}>
+                                    {index + 1}
+                                </div>
+                                <div className="building-info">
+                                    <div className="building-name">Building #{building.building_id}</div>
+                                    <div className="building-type">
+                                        {building.primary_use || 'Unknown'} 
+                                        {building.square_feet && ` • ${(building.square_feet/1000).toFixed(0)}k sqft`}
+                                    </div>
+                                </div>
+                                <div className="building-score">
+                                    <div className="building-score-value">
+                                        {building.combined_score?.toFixed(2) || '0.00'}
+                                    </div>
+                                    <div className="building-score-label">Score</div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+
+        // Metrics Bar Component
+        const MetricsBar = ({ metrics }) => (
+            <div className="metrics-bar">
+                <div className="metric-item">
+                    <div className="metric-value" style={{ color: 'var(--accent-primary)' }}>
+                        {metrics?.RMSE?.toFixed(2) || '0.00'}
+                    </div>
+                    <div className="metric-label">RMSE</div>
+                </div>
+                <div className="metric-item">
+                    <div className="metric-value" style={{ color: 'var(--accent-secondary)' }}>
+                        {metrics?.MAE?.toFixed(2) || '0.00'}
+                    </div>
+                    <div className="metric-label">MAE</div>
+                </div>
+                <div className="metric-item">
+                    <div className="metric-value" style={{ color: 'var(--accent-success)' }}>
+                        {metrics?.RMSLE?.toFixed(4) || '0.00'}
+                    </div>
+                    <div className="metric-label">RMSLE</div>
+                </div>
+                <div className="metric-item">
+                    <div className="metric-value" style={{ color: 'var(--accent-warning)' }}>
+                        BiLSTM+Attn
+                    </div>
+                    <div className="metric-label">Model</div>
+                </div>
+            </div>
+        );
+
+        // Main App Component
+        const App = () => {
+            const [summary, setSummary] = useState(null);
+            const [buildings, setBuildings] = useState([]);
+            const [metrics, setMetrics] = useState(null);
+            const [chartData, setChartData] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                const loadData = async () => {
+                    setLoading(true);
+                    
+                    // Fetch all data in parallel
+                    const [summaryData, buildingsData, metricsData, distributionData, typeData, topData] = await Promise.all([
+                        fetchAPI('/summary'),
+                        fetchAPI('/buildings?limit=20'),
+                        fetchAPI('/metrics'),
+                        fetchAPI('/chart/anomaly-distribution'),
+                        fetchAPI('/chart/by-building-type'),
+                        fetchAPI('/chart/top-anomalies')
+                    ]);
+
+                    setSummary(summaryData);
+                    setBuildings(buildingsData?.buildings || []);
+                    setMetrics(metricsData);
+
+                    // Prepare chart data
+                    setChartData({
+                        distribution: distributionData ? {
+                            labels: distributionData.bins?.slice(0, -1).map((b, i) => 
+                                `${b.toFixed(1)}-${distributionData.bins[i+1]?.toFixed(1)}`
+                            ),
+                            datasets: [{
+                                data: distributionData.counts,
+                                backgroundColor: 'rgba(0, 212, 255, 0.5)',
+                                borderColor: 'rgba(0, 212, 255, 1)',
+                                borderWidth: 1
+                            }]
+                        } : null,
+                        byType: typeData ? {
+                            labels: typeData.types?.slice(0, 8),
+                            datasets: [{
+                                data: typeData.scores?.slice(0, 8),
+                                backgroundColor: [
+                                    'rgba(0, 212, 255, 0.7)',
+                                    'rgba(123, 44, 191, 0.7)',
+                                    'rgba(255, 107, 53, 0.7)',
+                                    'rgba(0, 255, 136, 0.7)',
+                                    'rgba(255, 51, 102, 0.7)',
+                                    'rgba(255, 206, 86, 0.7)',
+                                    'rgba(75, 192, 192, 0.7)',
+                                    'rgba(153, 102, 255, 0.7)'
+                                ]
+                            }]
+                        } : null,
+                        topAnomalies: topData ? {
+                            labels: topData.buildings,
+                            datasets: [{
+                                data: topData.scores,
+                                backgroundColor: 'rgba(255, 51, 102, 0.7)',
+                                borderColor: 'rgba(255, 51, 102, 1)',
+                                borderWidth: 1
+                            }]
+                        } : null
+                    });
+
+                    setLoading(false);
+                };
+
+                loadData();
+            }, []);
+
+            if (loading) {
+                return (
+                    <div className="loading" style={{ height: '100vh' }}>
+                        <div className="spinner"></div>
+                    </div>
+                );
+            }
+
+            return (
+                <>
+                    <Header summary={summary} />
+                    <main className="main-container">
+                        <div className="dashboard-grid">
+                            {/* Stat Cards */}
+                            <StatCard 
+                                title="Total Buildings" 
+                                value={summary?.total_buildings || 0}
+                                icon="building"
+                                color="var(--accent-primary)"
+                            />
+                            <StatCard 
+                                title="High Priority" 
+                                value={summary?.high_priority || 0}
+                                icon="exclamation-triangle"
+                                color="var(--accent-danger)"
+                            />
+                            <StatCard 
+                                title="Medium Priority" 
+                                value={summary?.medium_priority || 0}
+                                icon="exclamation-circle"
+                                color="var(--accent-warning)"
+                            />
+                            <StatCard 
+                                title="Low Priority" 
+                                value={summary?.low_priority || 0}
+                                icon="check-circle"
+                                color="var(--accent-success)"
+                            />
+
+                            {/* 3D Visualization */}
+                            <div className="card viz-card">
+                                <div className="card-header">
+                                    <span className="card-title">3D Building Visualization</span>
+                                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                                        Color: Blue (Normal) → Red (Anomaly)
+                                    </span>
+                                </div>
+                                <ThreeVisualization buildings={buildings} />
+                            </div>
+
+                            {/* Building List */}
+                            <BuildingList buildings={buildings} />
+
+                            {/* Charts */}
+                            <ChartCard 
+                                title="Anomaly Score Distribution" 
+                                type="bar" 
+                                data={chartData.distribution}
+                                wide
+                            />
+                            <ChartCard 
+                                title="By Building Type" 
+                                type="doughnut" 
+                                data={chartData.byType}
+                            />
+                            <ChartCard 
+                                title="Top Anomalies" 
+                                type="bar" 
+                                data={chartData.topAnomalies}
+                            />
+
+                            {/* Metrics Bar */}
+                            <MetricsBar metrics={metrics} />
+                        </div>
+                    </main>
+                </>
+            );
+        };
+
+        // Render
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

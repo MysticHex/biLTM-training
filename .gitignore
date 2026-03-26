@@ -1,0 +1,14 @@
+/data
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Training artifacts and checkpoints
+processed_*.npy
+embedding_info.pkl
+best_model.pth
+optuna_study.pkl
+
+# Notebook metadata
+.ipynb_checkpoints/
